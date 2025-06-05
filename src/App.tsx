@@ -9,6 +9,7 @@ import Inventory from "./pages/Inventory";
 import Prices from "./pages/Prices";
 import Brands from "./pages/Brands";
 import NotFound from "./pages/NotFound";
+import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -17,16 +18,21 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/prices" element={<Prices />} />
-          <Route path="/brands" element={<Brands />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <div className="min-h-screen flex flex-col">
+        <div className="flex-1">
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/prices" element={<Prices />} />
+              <Route path="/brands" element={<Brands />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </div>
+        <Footer />
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );
