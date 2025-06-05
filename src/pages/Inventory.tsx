@@ -85,14 +85,26 @@ const Inventory = () => {
         description: `Inventory data loaded for ${format(selectedDate, 'PPP')}`,
       });
     } else {
-      // Load previous day's closing stock as opening balance
+      // Reset inventory and load previous day's closing stock as opening balance
       const previousDate = new Date(selectedDate);
       previousDate.setDate(previousDate.getDate() - 1);
       const previousData = localStorage.getItem(`inventory_${format(previousDate, 'yyyy-MM-dd')}`);
       
+      const newInventory = [...inventory];
+      // First reset all fields to 0
+      newInventory.forEach((item, index) => {
+        newInventory[index] = {
+          ...item,
+          openingBalance: 0,
+          purchase: 0,
+          closingStock: 0,
+          sales: 0
+        };
+      });
+      
+      // Then set opening balance from previous day's closing stock if available
       if (previousData) {
         const previousInventory = JSON.parse(previousData);
-        const newInventory = [...inventory];
         previousInventory.forEach((item: InventoryItem, index: number) => {
           if (newInventory[index]) {
             newInventory[index].openingBalance = item.closingStock;
@@ -108,6 +120,8 @@ const Inventory = () => {
           title: "Previous Day's Closing Stock Loaded",
           description: "Yesterday's closing stock has been set as today's opening balance",
         });
+      } else {
+        setInventory(newInventory);
       }
     }
   };
