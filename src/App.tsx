@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Inventory from "./pages/Inventory";
 import Brands from "./pages/Brands";
+import Vendors from "./pages/Vendors";
+import PurchaseOrder from "./pages/PurchaseOrder";
 import NotFound from "./pages/NotFound";
 import Footer from "./components/Footer";
 
