@@ -1,8 +1,7 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Package, BarChart3, Tags } from "lucide-react";
+import { Package, Tags, Users, ShoppingCart } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -10,17 +9,17 @@ const Index = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-amber-50 to-orange-100 overflow-hidden">
       <div className="container mx-auto px-4 py-4 h-full flex flex-col">
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <h1 className="text-4xl font-bold text-amber-900 mb-2">
             Liquor Inventory Management
           </h1>
-          <p className="text-lg text-amber-700 mb-4">
+          <p className="text-lg text-amber-700">
             Streamline your liquor inventory with precision and ease
           </p>
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto w-full">
             <div 
               onClick={() => navigate("/inventory")}
               className="bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-2 border-amber-200 hover:border-amber-300"
@@ -56,18 +55,42 @@ const Index = () => {
                 Manage Brands & Prices
               </Button>
             </div>
-          </div>
-        </div>
 
-        <div className="mt-4 text-center">
-          <div className="bg-white rounded-xl shadow-lg p-4 max-w-xl mx-auto border border-amber-200">
-            <BarChart3 className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-            <h3 className="text-lg font-semibold text-gray-800 mb-1">
-              Automatic Sales Calculation
-            </h3>
-            <p className="text-gray-600 text-sm">
-              Sales = Opening Balance + Purchase - Closing Stock
-            </p>
+            <div 
+              onClick={() => navigate("/vendors")}
+              className="bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-2 border-blue-200 hover:border-blue-300"
+            >
+              <div className="flex items-center justify-center mb-4">
+                <Users className="w-12 h-12 text-blue-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">
+                Vendor Management
+              </h2>
+              <p className="text-gray-600 text-center mb-4 text-sm">
+                Manage vendor details, contact information, and payment terms
+              </p>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2">
+                Manage Vendors
+              </Button>
+            </div>
+
+            <div 
+              onClick={() => navigate("/purchase-order")}
+              className="bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-2 border-green-200 hover:border-green-300"
+            >
+              <div className="flex items-center justify-center mb-4">
+                <ShoppingCart className="w-12 h-12 text-green-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">
+                Purchase Orders
+              </h2>
+              <p className="text-gray-600 text-center mb-4 text-sm">
+                Create purchase orders and automatically update inventory
+              </p>
+              <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2">
+                Create Purchase Order
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -33,6 +33,11 @@ const Inventory = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
 
+  // Check if opening stock should be editable (only on 1st of month)
+  const isOpeningStockEditable = () => {
+    return selectedDate.getDate() === 1;
+  };
+
   // Initialize inventory data
   useEffect(() => {
     const initialInventory: InventoryItem[] = [];
@@ -188,7 +193,7 @@ const Inventory = () => {
         </div>
 
         {/* Inventory Table */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
@@ -214,17 +219,13 @@ const Inventory = () => {
                         className="w-24 h-8 text-center border-blue-200 focus:border-blue-400"
                         min="0"
                         step="0.01"
+                        disabled={!isOpeningStockEditable()}
                       />
                     </td>
                     <td className="px-4 py-3 border-r">
-                      <Input
-                        type="number"
-                        value={item.purchase}
-                        onChange={(e) => updateInventoryItem(index, 'purchase', e.target.value)}
-                        className="w-24 h-8 text-center border-green-200 focus:border-green-400"
-                        min="0"
-                        step="0.01"
-                      />
+                      <div className="w-24 h-8 flex items-center justify-center bg-gray-100 rounded border text-gray-700 font-semibold">
+                        {item.purchase.toFixed(2)}
+                      </div>
                     </td>
                     <td className="px-4 py-3 border-r">
                       <Input
@@ -249,7 +250,7 @@ const Inventory = () => {
         </div>
 
         {/* Summary */}
-        <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Daily Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
