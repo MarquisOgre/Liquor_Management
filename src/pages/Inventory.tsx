@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CalendarIcon, Home, Save, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -195,23 +196,23 @@ const Inventory = () => {
         {/* Inventory Table */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r">Brand</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r">Size</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r bg-blue-50">Opening Balance</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r bg-green-50">Purchase</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r bg-orange-50">Closing Stock</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-700 bg-purple-50">Sales</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-semibold text-gray-700 bg-gray-50">Brand</TableHead>
+                  <TableHead className="font-semibold text-gray-700 bg-gray-50">Size</TableHead>
+                  <TableHead className="font-semibold text-gray-700 bg-blue-50">Opening Balance</TableHead>
+                  <TableHead className="font-semibold text-gray-700 bg-green-50">Purchase</TableHead>
+                  <TableHead className="font-semibold text-gray-700 bg-orange-50">Closing Stock</TableHead>
+                  <TableHead className="font-semibold text-gray-700 bg-purple-50">Sales</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {inventory.map((item, index) => (
-                  <tr key={`${item.brand}-${item.size}`} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-800 border-r bg-gray-50">{item.brand}</td>
-                    <td className="px-4 py-3 text-gray-600 border-r bg-gray-50">{item.size}</td>
-                    <td className="px-4 py-3 border-r">
+                  <TableRow key={`${item.brand}-${item.size}`} className="hover:bg-gray-50">
+                    <TableCell className="font-medium text-gray-800 bg-gray-50">{item.brand}</TableCell>
+                    <TableCell className="text-gray-600 bg-gray-50">{item.size}</TableCell>
+                    <TableCell>
                       <Input
                         type="number"
                         value={item.openingBalance}
@@ -221,13 +222,13 @@ const Inventory = () => {
                         step="0.01"
                         disabled={!isOpeningStockEditable()}
                       />
-                    </td>
-                    <td className="px-4 py-3 border-r">
+                    </TableCell>
+                    <TableCell>
                       <div className="w-24 h-8 flex items-center justify-center bg-gray-100 rounded border text-gray-700 font-semibold">
                         {item.purchase.toFixed(2)}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 border-r">
+                    </TableCell>
+                    <TableCell>
                       <Input
                         type="number"
                         value={item.closingStock}
@@ -236,16 +237,16 @@ const Inventory = () => {
                         min="0"
                         step="0.01"
                       />
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <div className="w-24 h-8 flex items-center justify-center bg-purple-50 rounded border text-purple-700 font-semibold">
                         {item.sales.toFixed(2)}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
 
