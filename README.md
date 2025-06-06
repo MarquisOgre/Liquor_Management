@@ -1,73 +1,91 @@
-# Welcome to your Lovable project
+# Welcome to your Dexorzo Creations Liquor Inventory Project
 
-## Project info
+## 📎 Liquor Inventory Project Info
 
-**URL**: https://lovable.dev/projects/4f9cacb5-4f33-413b-9bdf-d29493c95476
+**URL**: https://liquor-management-nine.vercel.app/ 
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🛠️ How can I edit this code?
 
-**Use Lovable**
+There are two main ways to edit your code:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4f9cacb5-4f33-413b-9bdf-d29493c95476) and start prompting.
+### 🧑‍💻 Use your preferred IDE locally
 
-Changes made via Lovable will be committed automatically to this repo.
+If you want to work in your local environment:
 
-**Use your preferred IDE**
+1. Clone the repository using Git:
+   ```sh
+   git clone https://github.com/MarquisOgre/Liquor_Management
+   ```
+2. Navigate to the project directory:
+   ```sh
+   cd Liquor_Management
+   ```
+3. Install dependencies:
+   ```sh
+   npm install
+   ```
+4. Start the development server:
+   ```sh
+   npm run dev
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+This will launch the app with hot reloading on `http://localhost:5173`.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+### ✏️ Edit directly on GitHub
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+You can also make quick edits directly through the GitHub interface:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. Navigate to the file you want to modify.
+2. Click the **pencil icon** (🖉) at the top-right of the file.
+3. Make your changes and scroll down to commit.
+4. GitHub will automatically update your repository.
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## ⚙️ Tech Stack
 
-**Edit a file directly in GitHub**
+This Dexorzo Creations project is built with:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **Vite** – Lightning-fast build tool
+- **TypeScript** – Strictly typed JavaScript
+- **React** – Component-based UI library
+- **shadcn-ui** – Accessible UI components
+- **Tailwind CSS** – Utility-first CSS framework
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🚀 How can I deploy this project?
 
-## What technologies are used for this project?
+You can deploy this project using [Vercel](https://vercel.com/).
 
-This project is built with:
+### Steps:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Visit [vercel.com](https://vercel.com/) and log in or sign up.
+2. Import your GitHub repository.
+3. Vercel will auto-detect the framework (Vite + React).
+4. Click **Deploy**.
+5. Your project will go live at a `your-project.vercel.app` subdomain.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/4f9cacb5-4f33-413b-9bdf-d29493c95476) and click on Share -> Publish.
+## 🌐 Can I connect a custom domain?
 
-## Can I connect a custom domain to my Lovable project?
+Yes, Vercel makes it simple to connect your own domain.
 
-Yes, you can!
+### Steps:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Go to your project dashboard on [Vercel](https://vercel.com/dashboard).
+2. Navigate to **Settings > Domains**.
+3. Click **Add** and enter your domain.
+4. Update your DNS with the instructions Vercel provides.
+5. Once DNS is verified, your custom domain is live.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+📖 Learn more here: [Vercel Custom Domain Guide](https://vercel.com/docs/concepts/projects/custom-domains)
+
+---
+
+Made with ❤️ by **Dexorzo Creations**. Happy building!
