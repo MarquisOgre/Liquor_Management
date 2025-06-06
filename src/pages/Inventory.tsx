@@ -33,6 +33,9 @@ const Inventory = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  console.log("Inventory component rendered", { inventoryLength: inventory.length });
 
   // Check if opening stock should be editable (only on 1st of month)
   const isOpeningStockEditable = () => {
@@ -40,7 +43,8 @@ const Inventory = () => {
   };
 
   // Initialize inventory data
-  useEffect(() => {
+  const initializeInventory = () => {
+    console.log("Initializing inventory data");
     const initialInventory: InventoryItem[] = [];
     brands.forEach(brand => {
       bottleSizes.forEach(size => {
@@ -54,8 +58,10 @@ const Inventory = () => {
         });
       });
     });
+    console.log("Initialized inventory items:", initialInventory.length);
     setInventory(initialInventory);
-  }, []);
+    setIsLoading(false);
+  };
 
   // Calculate sales automatically
   const calculateSales = (openingBalance: number, purchase: number, closingStock: number) => {
@@ -83,19 +89,29 @@ const Inventory = () => {
   };
 
   const loadInventory = () => {
+    console.log("Loading inventory for date:", format(selectedDate, 'yyyy-MM-dd'));
     const savedData = localStorage.getItem(`inventory_${format(selectedDate, 'yyyy-MM-dd')}`);
     if (savedData) {
-      setInventory(JSON.parse(savedData));
+      const loadedData = JSON.parse(savedData);
+      console.log("Loaded saved data:", loadedData.length, "items");
+      setInventory(loadedData);
       toast({
         title: "Inventory Loaded",
         description: `Inventory data loaded for ${format(selectedDate, 'PPP')}`,
       });
     } else {
+      console.log("No saved data found, checking previous day");
       // Reset inventory and load previous day's closing stock as opening balance
       const previousDate = new Date(selectedDate);
       previousDate.setDate(previousDate.getDate() - 1);
       const previousData = localStorage.getItem(`inventory_${format(previousDate, 'yyyy-MM-dd')}`);
       
+      if (inventory.length === 0) {
+        console.log("Inventory not initialized, initializing now");
+        initializeInventory();
+        return;
+      }
+
       const newInventory = [...inventory];
       // First reset all fields to 0
       newInventory.forEach((item, index) => {
@@ -130,11 +146,29 @@ const Inventory = () => {
         setInventory(newInventory);
       }
     }
+    setIsLoading(false);
   };
 
+  // Initialize inventory on component mount
   useEffect(() => {
-    loadInventory();
+    console.log("Component mounted, initializing inventory");
+    initializeInventory();
+  }, []);
+
+  // Load inventory when date changes
+  useEffect(() => {
+    if (inventory.length > 0) {
+      loadInventory();
+    }
   }, [selectedDate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 flex items-center justify-center">
+        <div className="text-lg text-gray-600">Loading inventory...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -193,60 +227,76 @@ const Inventory = () => {
           </div>
         </div>
 
+        {/* Debug Info */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-yellow-800">
+            Debug: Inventory items loaded: {inventory.length} | Brands: {brands.length} | Sizes: {bottleSizes.length}
+          </p>
+        </div>
+
         {/* Inventory Table */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-semibold text-gray-700 bg-gray-50">Brand</TableHead>
-                  <TableHead className="font-semibold text-gray-700 bg-gray-50">Size</TableHead>
-                  <TableHead className="font-semibold text-gray-700 bg-blue-50">Opening Balance</TableHead>
-                  <TableHead className="font-semibold text-gray-700 bg-green-50">Purchase</TableHead>
-                  <TableHead className="font-semibold text-gray-700 bg-orange-50">Closing Stock</TableHead>
-                  <TableHead className="font-semibold text-gray-700 bg-purple-50">Sales</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {inventory.map((item, index) => (
-                  <TableRow key={`${item.brand}-${item.size}`} className="hover:bg-gray-50">
-                    <TableCell className="font-medium text-gray-800 bg-gray-50">{item.brand}</TableCell>
-                    <TableCell className="text-gray-600 bg-gray-50">{item.size}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={item.openingBalance}
-                        onChange={(e) => updateInventoryItem(index, 'openingBalance', e.target.value)}
-                        className="w-24 h-8 text-center border-blue-200 focus:border-blue-400"
-                        min="0"
-                        step="0.01"
-                        disabled={!isOpeningStockEditable()}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="w-24 h-8 flex items-center justify-center bg-gray-100 rounded border text-gray-700 font-semibold">
-                        {item.purchase.toFixed(2)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={item.closingStock}
-                        onChange={(e) => updateInventoryItem(index, 'closingStock', e.target.value)}
-                        className="w-24 h-8 text-center border-orange-200 focus:border-orange-400"
-                        min="0"
-                        step="0.01"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="w-24 h-8 flex items-center justify-center bg-purple-50 rounded border text-purple-700 font-semibold">
-                        {item.sales.toFixed(2)}
-                      </div>
-                    </TableCell>
+            {inventory.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <p>No inventory data available. Initializing...</p>
+                <Button onClick={initializeInventory} className="mt-4">
+                  Initialize Inventory
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-semibold text-gray-700 bg-gray-50">Brand</TableHead>
+                    <TableHead className="font-semibold text-gray-700 bg-gray-50">Size</TableHead>
+                    <TableHead className="font-semibold text-gray-700 bg-blue-50">Opening Balance</TableHead>
+                    <TableHead className="font-semibold text-gray-700 bg-green-50">Purchase</TableHead>
+                    <TableHead className="font-semibold text-gray-700 bg-orange-50">Closing Stock</TableHead>
+                    <TableHead className="font-semibold text-gray-700 bg-purple-50">Sales</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {inventory.map((item, index) => (
+                    <TableRow key={`${item.brand}-${item.size}`} className="hover:bg-gray-50">
+                      <TableCell className="font-medium text-gray-800 bg-gray-50">{item.brand}</TableCell>
+                      <TableCell className="text-gray-600 bg-gray-50">{item.size}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={item.openingBalance}
+                          onChange={(e) => updateInventoryItem(index, 'openingBalance', e.target.value)}
+                          className="w-24 h-8 text-center border-blue-200 focus:border-blue-400"
+                          min="0"
+                          step="0.01"
+                          disabled={!isOpeningStockEditable()}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-24 h-8 flex items-center justify-center bg-gray-100 rounded border text-gray-700 font-semibold">
+                          {item.purchase.toFixed(2)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={item.closingStock}
+                          onChange={(e) => updateInventoryItem(index, 'closingStock', e.target.value)}
+                          className="w-24 h-8 text-center border-orange-200 focus:border-orange-400"
+                          min="0"
+                          step="0.01"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-24 h-8 flex items-center justify-center bg-purple-50 rounded border text-purple-700 font-semibold">
+                          {item.sales.toFixed(2)}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
 
