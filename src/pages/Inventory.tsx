@@ -5,6 +5,7 @@ import { useInventory } from "@/hooks/useInventory";
 import { InventoryHeader } from "@/components/inventory/InventoryHeader";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventorySummary } from "@/components/inventory/InventorySummary";
+import Navigation from "@/components/Navigation";
 
 const Inventory = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -29,8 +30,9 @@ const Inventory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navigation />
+      <div className="container mx-auto p-4">
         <InventoryHeader
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
