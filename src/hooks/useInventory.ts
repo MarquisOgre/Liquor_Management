@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { InventoryItem, brands, bottleSizes } from "@/types/inventory";
+import { inventoryService, InventoryRecord } from "@/services/inventoryService";
 
 export const useInventory = (selectedDate: Date) => {
   const { toast } = useToast();
@@ -15,6 +16,27 @@ export const useInventory = (selectedDate: Date) => {
   const isOpeningStockEditable = () => {
     return selectedDate.getDate() === 1;
   };
+
+  // Convert InventoryRecord to InventoryItem
+  const recordToItem = (record: InventoryRecord): InventoryItem => ({
+    brand: record.brand,
+    size: record.size,
+    openingBalance: Number(record.opening_balance),
+    purchase: Number(record.purchase),
+    closingStock: Number(record.closing_stock),
+    sales: Number(record.sales)
+  });
+
+  // Convert InventoryItem to InventoryRecord
+  const itemToRecord = (item: InventoryItem, date: Date): InventoryRecord => ({
+    date: format(date, 'yyyy-MM-dd'),
+    brand: item.brand,
+    size: item.size,
+    opening_balance: item.openingBalance,
+    purchase: item.purchase,
+    closing_stock: item.closingStock,
+    sales: item.sales
+  });
 
   // Initialize inventory data
   const initializeInventory = () => {
@@ -54,73 +76,113 @@ export const useInventory = (selectedDate: Date) => {
     setInventory(newInventory);
   };
 
-  const saveInventory = () => {
-    localStorage.setItem(`inventory_${format(selectedDate, 'yyyy-MM-dd')}`, JSON.stringify(inventory));
-    toast({
-      title: "Inventory Saved",
-      description: `Inventory data saved for ${format(selectedDate, 'PPP')}`,
-    });
+  const saveInventory = async () => {
+    try {
+      setIsLoading(true);
+      const records = inventory.map(item => itemToRecord(item, selectedDate));
+      await inventoryService.saveAllInventory(records);
+      
+      toast({
+        title: "Inventory Saved",
+        description: `Inventory data saved to Supabase for ${format(selectedDate, 'PPP')}`,
+      });
+    } catch (error) {
+      console.error("Error saving inventory:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save inventory data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const loadInventory = () => {
-    console.log("Loading inventory for date:", format(selectedDate, 'yyyy-MM-dd'));
-    const savedData = localStorage.getItem(`inventory_${format(selectedDate, 'yyyy-MM-dd')}`);
-    if (savedData) {
-      const loadedData = JSON.parse(savedData);
-      console.log("Loaded saved data:", loadedData.length, "items");
-      setInventory(loadedData);
-      toast({
-        title: "Inventory Loaded",
-        description: `Inventory data loaded for ${format(selectedDate, 'PPP')}`,
-      });
-    } else {
-      console.log("No saved data found, checking previous day");
-      // Reset inventory and load previous day's closing stock as opening balance
-      const previousDate = new Date(selectedDate);
-      previousDate.setDate(previousDate.getDate() - 1);
-      const previousData = localStorage.getItem(`inventory_${format(previousDate, 'yyyy-MM-dd')}`);
+  const loadInventory = async () => {
+    try {
+      setIsLoading(true);
+      console.log("Loading inventory for date:", format(selectedDate, 'yyyy-MM-dd'));
       
-      if (inventory.length === 0) {
-        console.log("Inventory not initialized, initializing now");
-        initializeInventory();
-        return;
-      }
-
-      const newInventory = [...inventory];
-      // First reset all fields to 0
-      newInventory.forEach((item, index) => {
-        newInventory[index] = {
-          ...item,
-          openingBalance: 0,
-          purchase: 0,
-          closingStock: 0,
-          sales: 0
-        };
-      });
+      const records = await inventoryService.getInventoryByDate(selectedDate);
       
-      // Then set opening balance from previous day's closing stock if available
-      if (previousData) {
-        const previousInventory = JSON.parse(previousData);
-        previousInventory.forEach((item: InventoryItem, index: number) => {
-          if (newInventory[index]) {
-            newInventory[index].openingBalance = item.closingStock;
-            newInventory[index].sales = calculateSales(
-              newInventory[index].openingBalance,
-              newInventory[index].purchase,
-              newInventory[index].closingStock
-            );
-          }
+      if (records.length > 0) {
+        console.log("Loaded saved data:", records.length, "items");
+        // Create a map for quick lookup
+        const recordMap = new Map<string, InventoryRecord>();
+        records.forEach(record => {
+          recordMap.set(`${record.brand}-${record.size}`, record);
         });
-        setInventory(newInventory);
+        
+        // Initialize inventory with all brand-size combinations
+        const loadedInventory: InventoryItem[] = [];
+        brands.forEach(brand => {
+          bottleSizes.forEach(size => {
+            const key = `${brand}-${size}`;
+            const record = recordMap.get(key);
+            if (record) {
+              loadedInventory.push(recordToItem(record));
+            } else {
+              loadedInventory.push({
+                brand,
+                size,
+                openingBalance: 0,
+                purchase: 0,
+                closingStock: 0,
+                sales: 0
+              });
+            }
+          });
+        });
+        
+        setInventory(loadedInventory);
         toast({
-          title: "Previous Day's Closing Stock Loaded",
-          description: "Yesterday's closing stock has been set as today's opening balance",
+          title: "Inventory Loaded",
+          description: `Inventory data loaded from Supabase for ${format(selectedDate, 'PPP')}`,
         });
       } else {
+        console.log("No saved data found, checking previous day");
+        // Load previous day's closing stock as opening balance
+        const previousDate = new Date(selectedDate);
+        previousDate.setDate(previousDate.getDate() - 1);
+        
+        const previousRecords = await inventoryService.getInventoryByDate(previousDate);
+        
+        const newInventory: InventoryItem[] = [];
+        brands.forEach(brand => {
+          bottleSizes.forEach(size => {
+            const previousRecord = previousRecords.find(r => r.brand === brand && r.size === size);
+            newInventory.push({
+              brand,
+              size,
+              openingBalance: previousRecord ? Number(previousRecord.closing_stock) : 0,
+              purchase: 0,
+              closingStock: 0,
+              sales: 0
+            });
+          });
+        });
+        
         setInventory(newInventory);
+        
+        if (previousRecords.length > 0) {
+          toast({
+            title: "Previous Day's Closing Stock Loaded",
+            description: "Yesterday's closing stock has been set as today's opening balance",
+          });
+        }
       }
+    } catch (error) {
+      console.error("Error loading inventory:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load inventory data",
+        variant: "destructive",
+      });
+      // Fallback to initialize empty inventory
+      initializeInventory();
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // Initialize inventory on component mount
