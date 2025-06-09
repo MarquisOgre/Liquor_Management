@@ -128,10 +128,10 @@ const UserManagement = () => {
         </div>
         <Button 
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="w-4 h-4" />
-          Create User
+          {showCreateForm ? 'Cancel' : 'Create User'}
         </Button>
       </div>
 
@@ -213,36 +213,40 @@ const UserManagement = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Existing Users</CardTitle>
+          <CardTitle>Existing Users ({users.length})</CardTitle>
           <CardDescription>Manage user roles and permissions</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">{user.full_name || 'No name'}</h3>
-                  <p className="text-sm text-gray-600">{user.email}</p>
-                  <p className="text-xs text-gray-500">
-                    Created: {new Date(user.created_at).toLocaleDateString()}
-                  </p>
+            {users.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No users found</p>
+            ) : (
+              users.map((user) => (
+                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-medium">{user.full_name || 'No name'}</h3>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-xs text-gray-500">
+                      Created: {new Date(user.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select 
+                      value={user.role} 
+                      onValueChange={(value: 'admin' | 'user') => updateUserRole(user.id, value)}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Select 
-                    value={user.role} 
-                    onValueChange={(value: 'admin' | 'user') => updateUserRole(user.id, value)}
-                  >
-                    <SelectTrigger className="w-24">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

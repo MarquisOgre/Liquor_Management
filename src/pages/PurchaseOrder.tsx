@@ -44,12 +44,11 @@ const PurchaseOrder = () => {
   const [orderDate, setOrderDate] = useState<Date>(new Date());
   const [expectedDelivery, setExpectedDelivery] = useState<Date>(new Date());
   const [orderItems, setOrderItems] = useState<PurchaseOrderItem[]>([]);
-  const [orderNumber, setOrderNumber] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchVendors();
-    generateOrderNumber();
   }, []);
 
   const fetchVendors = async () => {
@@ -69,30 +68,6 @@ const PurchaseOrder = () => {
         description: "Failed to fetch vendors",
         variant: "destructive",
       });
-    }
-  };
-
-  const generateOrderNumber = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('purchase_orders')
-        .select('po_number')
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (error) throw error;
-      
-      let nextNumber = 1;
-      if (data && data.length > 0) {
-        const lastPO = data[0].po_number;
-        const lastNumber = parseInt(lastPO.replace('PO-', '')) || 0;
-        nextNumber = lastNumber + 1;
-      }
-      
-      setOrderNumber(`PO-${nextNumber.toString().padStart(6, '0')}`);
-    } catch (error) {
-      console.error('Error generating order number:', error);
-      setOrderNumber(`PO-${Date.now().toString().slice(-6)}`);
     }
   };
 
@@ -127,10 +102,10 @@ const PurchaseOrder = () => {
   };
 
   const savePurchaseOrder = async () => {
-    if (!selectedVendor || orderItems.length === 0) {
+    if (!selectedVendor || orderItems.length === 0 || !invoiceNumber.trim()) {
       toast({
         title: "Error",
-        description: "Please select a vendor and add at least one item.",
+        description: "Please fill in all required fields: vendor, invoice number, and add at least one item.",
         variant: "destructive",
       });
       return;
@@ -144,7 +119,7 @@ const PurchaseOrder = () => {
       const { data: poData, error: poError } = await supabase
         .from('purchase_orders')
         .insert([{
-          po_number: orderNumber,
+          po_number: invoiceNumber,
           vendor_id: selectedVendor,
           vendor_name: selectedVendorData?.name || '',
           order_date: format(orderDate, 'yyyy-MM-dd'),
@@ -175,13 +150,13 @@ const PurchaseOrder = () => {
 
       toast({
         title: "Purchase Order Created",
-        description: `Purchase order ${orderNumber} has been created successfully.`,
+        description: `Purchase order ${invoiceNumber} has been created successfully.`,
       });
 
       // Reset form
       setSelectedVendor("");
       setOrderItems([]);
-      generateOrderNumber();
+      setInvoiceNumber("");
       setOrderDate(new Date());
       setExpectedDelivery(new Date());
     } catch (error: any) {
@@ -232,11 +207,16 @@ const PurchaseOrder = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Order Number</label>
-                <Input value={orderNumber} readOnly className="bg-gray-100" />
+                <label className="block text-sm font-medium mb-2">Invoice No <span className="text-red-500">*</span></label>
+                <Input 
+                  value={invoiceNumber} 
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  placeholder="Enter invoice number"
+                  required
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Vendor</label>
+                <label className="block text-sm font-medium mb-2">Vendor <span className="text-red-500">*</span></label>
                 <Select value={selectedVendor} onValueChange={setSelectedVendor}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select vendor" />
