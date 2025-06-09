@@ -38,7 +38,10 @@ const UserManagement = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setUsers(data || []);
+      setUsers((data || []).map(user => ({
+        ...user,
+        role: user.role as 'admin' | 'user'
+      })));
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -58,16 +61,15 @@ const UserManagement = () => {
     setLoading(true);
 
     try {
-      // Note: In a real app, this would need to be done via an admin API or Edge Function
-      // For now, we'll show how it would work with direct Supabase auth
-      const { data, error } = await supabase.auth.admin.createUser({
+      const { data, error } = await supabase.auth.signUp({
         email: newUser.email,
         password: newUser.password,
-        user_metadata: {
-          full_name: newUser.fullName,
-          role: newUser.role
-        },
-        email_confirm: true
+        options: {
+          data: {
+            full_name: newUser.fullName,
+            role: newUser.role
+          }
+        }
       });
 
       if (error) throw error;
