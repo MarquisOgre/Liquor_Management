@@ -1,135 +1,121 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Users, FileText, ShoppingCart, TrendingUp, BarChart3 } from "lucide-react";
-import { Link } from "react-router-dom";
-import Navigation from "@/components/Navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, Package, Users, TrendingUp, FileText, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Navigation from '@/components/Navigation';
 
 const Index = () => {
-  const features = [
-    {
-      title: "Inventory Management",
-      description: "Track your liquor inventory with opening balance, purchases, sales, and closing stock.",
-      icon: Package,
-      href: "/inventory",
-      color: "bg-blue-500"
-    },
-    {
-      title: "Brand Management",
-      description: "Manage different liquor brands and their bottle sizes.",
-      icon: TrendingUp,
-      href: "/brands",
-      color: "bg-green-500"
-    },
-    {
-      title: "Vendor Management",
-      description: "Manage your vendors and supplier information.",
-      icon: Users,
-      href: "/vendors",
-      color: "bg-purple-500"
-    },
-    {
-      title: "Purchase Orders",
-      description: "Create and manage purchase orders with your vendors.",
-      icon: FileText,
-      href: "/purchase-order",
-      color: "bg-orange-500"
-    },
-    {
-      title: "View Purchase Orders",
-      description: "View and filter all purchase orders by date ranges.",
-      icon: ShoppingCart,
-      href: "/purchase-orders",
-      color: "bg-teal-500"
-    },
-    {
-      title: "Reports & Analytics",
-      description: "Generate reports and analyze your inventory performance.",
-      icon: BarChart3,
-      href: "/reports",
-      color: "bg-red-500"
-    }
-  ];
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navigation />
-      
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+      <div className="container mx-auto p-4">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Liquor Inventory Management System
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Streamline your liquor inventory operations with our comprehensive management system. 
-            Track inventory, manage vendors, create purchase orders, and generate insightful reports.
+          <p className="text-lg text-gray-600">
+            Manage your liquor inventory, track sales, and optimize your business operations
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => {
-            const IconComponent = feature.icon;
-            return (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
-                <CardHeader>
-                  <div className={`w-12 h-12 ${feature.color} rounded-lg flex items-center justify-center mb-4`}>
-                    <IconComponent className="w-6 h-6 text-white" />
-                  </div>
-                  <CardTitle className="text-xl font-semibold">
-                    {feature.title}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Link to={feature.href}>
-                    <Button className="w-full">
-                      Get Started
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/inventory')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Inventory Management</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Track Stock</div>
+              <p className="text-xs text-muted-foreground">
+                Monitor your inventory levels and manage stock efficiently.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/vendors')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Vendor Management</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Suppliers</div>
+              <p className="text-xs text-muted-foreground">
+                Manage your supplier relationships and contact information.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/purchase-orders')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Purchase Orders</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Orders</div>
+              <p className="text-xs text-muted-foreground">
+                Create and manage purchase orders for restocking.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/reports')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Reports & Analytics</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Insights</div>
+              <p className="text-xs text-muted-foreground">
+                Generate reports and analyze your inventory performance.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/brands')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Brand Management</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Brands</div>
+              <p className="text-xs text-muted-foreground">
+                Manage product brands and categories in your inventory.
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="mt-16 bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Key Features
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-              <div className="text-center">
-                <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="font-semibold mb-2">Real-time Tracking</h3>
-                <p className="text-sm text-gray-600">Monitor your inventory levels in real-time</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="font-semibold mb-2">Vendor Management</h3>
-                <p className="text-sm text-gray-600">Maintain detailed vendor information and relationships</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-8 h-8 text-purple-600" />
-                </div>
-                <h3 className="font-semibold mb-2">Purchase Orders</h3>
-                <p className="text-sm text-gray-600">Streamlined purchase order creation and tracking</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <BarChart3 className="w-8 h-8 text-orange-600" />
-                </div>
-                <h3 className="font-semibold mb-2">Analytics</h3>
-                <p className="text-sm text-gray-600">Comprehensive reports and business insights</p>
-              </div>
-            </div>
+        {/* Quick Create Actions */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-4">
+            <Button 
+              onClick={() => navigate('/purchase-order')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              Create Purchase Order
+            </Button>
+            <Button 
+              onClick={() => navigate('/inventory')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Package className="w-4 h-4" />
+              View Inventory
+            </Button>
+            <Button 
+              onClick={() => navigate('/vendors')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              Manage Vendors
+            </Button>
           </div>
         </div>
       </div>
