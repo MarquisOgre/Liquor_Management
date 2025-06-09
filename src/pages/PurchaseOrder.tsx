@@ -12,6 +12,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import Navigation from "@/components/Navigation";
 
 const brands = [
   "IB", "Royal Stag", "MM Vodka", "Iconiq White", "MM Orange",
@@ -29,39 +31,70 @@ interface PurchaseOrderItem {
   amount: number;
 }
 
-interface PurchaseOrder {
+interface Vendor {
   id: string;
-  orderNumber: string;
-  vendor: string;
-  orderDate: Date;
-  expectedDelivery: Date;
-  items: PurchaseOrderItem[];
-  totalAmount: number;
-  status: 'pending' | 'received' | 'cancelled';
+  name: string;
 }
 
 const PurchaseOrder = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [vendors, setVendors] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [selectedVendor, setSelectedVendor] = useState("");
   const [orderDate, setOrderDate] = useState<Date>(new Date());
   const [expectedDelivery, setExpectedDelivery] = useState<Date>(new Date());
   const [orderItems, setOrderItems] = useState<PurchaseOrderItem[]>([]);
   const [orderNumber, setOrderNumber] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load vendors from localStorage
-    const savedVendors = localStorage.getItem('vendors');
-    if (savedVendors) {
-      setVendors(JSON.parse(savedVendors));
-    }
-
-    // Generate order number
-    const lastOrderNum = localStorage.getItem('lastOrderNumber') || '0';
-    const newOrderNum = (parseInt(lastOrderNum) + 1).toString().padStart(6, '0');
-    setOrderNumber(`PO${newOrderNum}`);
+    fetchVendors();
+    generateOrderNumber();
   }, []);
+
+  const fetchVendors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vendors')
+        .select('id, name')
+        .eq('status', 'active')
+        .order('name');
+      
+      if (error) throw error;
+      setVendors(data || []);
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch vendors",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateOrderNumber = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('purchase_orders')
+        .select('po_number')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        const lastPO = data[0].po_number;
+        const lastNumber = parseInt(lastPO.replace('PO-', '')) || 0;
+        nextNumber = lastNumber + 1;
+      }
+      
+      setOrderNumber(`PO-${nextNumber.toString().padStart(6, '0')}`);
+    } catch (error) {
+      console.error('Error generating order number:', error);
+      setOrderNumber(`PO-${Date.now().toString().slice(-6)}`);
+    }
+  };
 
   const addOrderItem = () => {
     setOrderItems([...orderItems, {
@@ -77,7 +110,6 @@ const PurchaseOrder = () => {
     const newItems = [...orderItems];
     newItems[index] = { ...newItems[index], [field]: value };
     
-    // Calculate amount
     if (field === 'quantity' || field === 'rate') {
       newItems[index].amount = newItems[index].quantity * newItems[index].rate;
     }
@@ -94,7 +126,7 @@ const PurchaseOrder = () => {
     return orderItems.reduce((sum, item) => sum + item.amount, 0);
   };
 
-  const savePurchaseOrder = () => {
+  const savePurchaseOrder = async () => {
     if (!selectedVendor || orderItems.length === 0) {
       toast({
         title: "Error",
@@ -104,95 +136,70 @@ const PurchaseOrder = () => {
       return;
     }
 
-    const purchaseOrder: PurchaseOrder = {
-      id: Date.now().toString(),
-      orderNumber,
-      vendor: selectedVendor,
-      orderDate,
-      expectedDelivery,
-      items: orderItems,
-      totalAmount: getTotalAmount(),
-      status: 'pending'
-    };
+    setLoading(true);
+    try {
+      const selectedVendorData = vendors.find(v => v.id === selectedVendor);
+      
+      // Insert purchase order
+      const { data: poData, error: poError } = await supabase
+        .from('purchase_orders')
+        .insert([{
+          po_number: orderNumber,
+          vendor_id: selectedVendor,
+          vendor_name: selectedVendorData?.name || '',
+          order_date: format(orderDate, 'yyyy-MM-dd'),
+          expected_delivery_date: format(expectedDelivery, 'yyyy-MM-dd'),
+          total_amount: getTotalAmount(),
+          status: 'pending'
+        }])
+        .select()
+        .single();
 
-    // Save purchase order
-    const savedOrders = localStorage.getItem('purchaseOrders');
-    const orders = savedOrders ? JSON.parse(savedOrders) : [];
-    orders.push(purchaseOrder);
-    localStorage.setItem('purchaseOrders', JSON.stringify(orders));
+      if (poError) throw poError;
 
-    // Update last order number
-    const orderNum = parseInt(orderNumber.replace('PO', ''));
-    localStorage.setItem('lastOrderNumber', orderNum.toString());
+      // Insert purchase order items
+      const itemsToInsert = orderItems.map(item => ({
+        purchase_order_id: poData.id,
+        item_name: `${item.brand} ${item.size}`,
+        brand: item.brand,
+        size: item.size,
+        quantity: item.quantity,
+        unit_price: item.rate
+      }));
 
-    toast({
-      title: "Purchase Order Created",
-      description: `Purchase order ${orderNumber} has been created successfully.`,
-    });
+      const { error: itemsError } = await supabase
+        .from('purchase_order_items')
+        .insert(itemsToInsert);
 
-    // Reset form
-    setSelectedVendor("");
-    setOrderItems([]);
-    const newOrderNum = (orderNum + 1).toString().padStart(6, '0');
-    setOrderNumber(`PO${newOrderNum}`);
-  };
+      if (itemsError) throw itemsError;
 
-  const receivePurchaseOrder = () => {
-    if (!selectedVendor || orderItems.length === 0) {
+      toast({
+        title: "Purchase Order Created",
+        description: `Purchase order ${orderNumber} has been created successfully.`,
+      });
+
+      // Reset form
+      setSelectedVendor("");
+      setOrderItems([]);
+      generateOrderNumber();
+      setOrderDate(new Date());
+      setExpectedDelivery(new Date());
+    } catch (error: any) {
+      console.error('Error saving purchase order:', error);
       toast({
         title: "Error",
-        description: "Please select a vendor and add at least one item.",
+        description: error.message || "Failed to create purchase order",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    // Update inventory with received items
-    const inventoryKey = `inventory_${format(new Date(), 'yyyy-MM-dd')}`;
-    const savedInventory = localStorage.getItem(inventoryKey);
-    let inventory = savedInventory ? JSON.parse(savedInventory) : [];
-
-    // If no inventory exists for today, create it
-    if (inventory.length === 0) {
-      brands.forEach(brand => {
-        bottleSizes.forEach(size => {
-          inventory.push({
-            brand,
-            size,
-            openingBalance: 0,
-            purchase: 0,
-            closingStock: 0,
-            sales: 0
-          });
-        });
-      });
-    }
-
-    // Update purchase quantities
-    orderItems.forEach(orderItem => {
-      const inventoryItem = inventory.find((item: any) => 
-        item.brand === orderItem.brand && item.size === orderItem.size
-      );
-      if (inventoryItem) {
-        inventoryItem.purchase += orderItem.quantity;
-        inventoryItem.sales = inventoryItem.openingBalance + inventoryItem.purchase - inventoryItem.closingStock;
-      }
-    });
-
-    localStorage.setItem(inventoryKey, JSON.stringify(inventory));
-
-    // Save as received purchase order
-    savePurchaseOrder();
-
-    toast({
-      title: "Purchase Order Received",
-      description: `Items have been added to inventory for ${format(new Date(), 'PPP')}.`,
-    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navigation />
+      <div className="container mx-auto p-4">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -206,15 +213,21 @@ const PurchaseOrder = () => {
                 <Home className="w-4 h-4" />
                 Home
               </Button>
-              <h1 className="text-3xl font-bold text-gray-800">Purchase Order</h1>
+              <h1 className="text-3xl font-bold text-gray-800">Create Purchase Order</h1>
             </div>
+            <Button
+              onClick={() => navigate("/purchase-orders")}
+              variant="outline"
+            >
+              View All Orders
+            </Button>
           </div>
         </div>
 
         {/* Purchase Order Form */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Create Purchase Order</CardTitle>
+            <CardTitle>Purchase Order Details</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -230,7 +243,7 @@ const PurchaseOrder = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {vendors.map((vendor) => (
-                      <SelectItem key={vendor.id} value={vendor.name}>
+                      <SelectItem key={vendor.id} value={vendor.id}>
                         {vendor.name}
                       </SelectItem>
                     ))}
@@ -388,13 +401,13 @@ const PurchaseOrder = () => {
             </div>
 
             <div className="flex gap-4 justify-end">
-              <Button onClick={savePurchaseOrder} className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                onClick={savePurchaseOrder} 
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={loading}
+              >
                 <Save className="w-4 h-4 mr-2" />
-                Save Order
-              </Button>
-              <Button onClick={receivePurchaseOrder} className="bg-green-600 hover:bg-green-700">
-                <Save className="w-4 h-4 mr-2" />
-                Receive & Add to Inventory
+                {loading ? 'Saving...' : 'Save Order'}
               </Button>
             </div>
           </CardContent>

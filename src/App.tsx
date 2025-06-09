@@ -11,6 +11,7 @@ import Inventory from "./pages/Inventory";
 import Brands from "./pages/Brands";
 import Vendors from "./pages/Vendors";
 import PurchaseOrder from "./pages/PurchaseOrder";
+import PurchaseOrders from "./pages/PurchaseOrders";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -52,6 +53,11 @@ const App = () => (
                 <Route path="/purchase-order" element={
                   <ProtectedRoute>
                     <PurchaseOrder />
+                  </ProtectedRoute>
+                } />
+                <Route path="/purchase-orders" element={
+                  <ProtectedRoute>
+                    <PurchaseOrders />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin" element={

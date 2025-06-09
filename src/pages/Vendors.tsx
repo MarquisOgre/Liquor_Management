@@ -10,18 +10,22 @@ import { useForm } from "react-hook-form";
 import { Home, Plus, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import Navigation from "@/components/Navigation";
 
 interface Vendor {
-  id: string;
+  id?: string;
   name: string;
-  contactPerson: string;
+  contact_person: string;
   phone: string;
   email: string;
   address: string;
-  gstNumber: string;
-  panNumber: string;
-  paymentTerms: string;
-  creditLimit: number;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  status: string;
+  notes: string;
 }
 
 const Vendors = () => {
@@ -30,53 +34,89 @@ const Vendors = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<Vendor>({
     defaultValues: {
-      id: "",
       name: "",
-      contactPerson: "",
+      contact_person: "",
       phone: "",
       email: "",
       address: "",
-      gstNumber: "",
-      panNumber: "",
-      paymentTerms: "",
-      creditLimit: 0,
+      city: "",
+      state: "",
+      postal_code: "",
+      country: "India",
+      status: "active",
+      notes: "",
     },
   });
 
-  useEffect(() => {
-    const savedVendors = localStorage.getItem('vendors');
-    if (savedVendors) {
-      setVendors(JSON.parse(savedVendors));
+  const fetchVendors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vendors')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setVendors(data || []);
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch vendors",
+        variant: "destructive",
+      });
     }
-  }, []);
-
-  const saveVendors = (newVendors: Vendor[]) => {
-    localStorage.setItem('vendors', JSON.stringify(newVendors));
-    setVendors(newVendors);
   };
 
-  const onSubmit = (data: Vendor) => {
-    if (editingVendor) {
-      const updatedVendors = vendors.map(v => v.id === editingVendor.id ? { ...data, id: editingVendor.id } : v);
-      saveVendors(updatedVendors);
+  useEffect(() => {
+    fetchVendors();
+  }, []);
+
+  const onSubmit = async (data: Vendor) => {
+    setLoading(true);
+    try {
+      if (editingVendor) {
+        const { error } = await supabase
+          .from('vendors')
+          .update(data)
+          .eq('id', editingVendor.id);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Vendor Updated",
+          description: "Vendor details have been updated successfully.",
+        });
+      } else {
+        const { error } = await supabase
+          .from('vendors')
+          .insert([data]);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Vendor Added",
+          description: "New vendor has been added successfully.",
+        });
+      }
+      
+      setIsDialogOpen(false);
+      setEditingVendor(null);
+      form.reset();
+      fetchVendors();
+    } catch (error: any) {
+      console.error('Error saving vendor:', error);
       toast({
-        title: "Vendor Updated",
-        description: "Vendor details have been updated successfully.",
+        title: "Error",
+        description: error.message || "Failed to save vendor",
+        variant: "destructive",
       });
-    } else {
-      const newVendor = { ...data, id: Date.now().toString() };
-      saveVendors([...vendors, newVendor]);
-      toast({
-        title: "Vendor Added",
-        description: "New vendor has been added successfully.",
-      });
+    } finally {
+      setLoading(false);
     }
-    setIsDialogOpen(false);
-    setEditingVendor(null);
-    form.reset();
   };
 
   const editVendor = (vendor: Vendor) => {
@@ -85,18 +125,35 @@ const Vendors = () => {
     setIsDialogOpen(true);
   };
 
-  const deleteVendor = (id: string) => {
-    const updatedVendors = vendors.filter(v => v.id !== id);
-    saveVendors(updatedVendors);
-    toast({
-      title: "Vendor Deleted",
-      description: "Vendor has been deleted successfully.",
-    });
+  const deleteVendor = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('vendors')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Vendor Deleted",
+        description: "Vendor has been deleted successfully.",
+      });
+      
+      fetchVendors();
+    } catch (error: any) {
+      console.error('Error deleting vendor:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete vendor",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navigation />
+      <div className="container mx-auto p-4">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -142,7 +199,7 @@ const Vendors = () => {
                       />
                       <FormField
                         control={form.control}
-                        name="contactPerson"
+                        name="contact_person"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Contact Person</FormLabel>
@@ -181,10 +238,10 @@ const Vendors = () => {
                       />
                       <FormField
                         control={form.control}
-                        name="gstNumber"
+                        name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>GST Number</FormLabel>
+                            <FormLabel>City</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
@@ -194,38 +251,12 @@ const Vendors = () => {
                       />
                       <FormField
                         control={form.control}
-                        name="panNumber"
+                        name="state"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>PAN Number</FormLabel>
+                            <FormLabel>State</FormLabel>
                             <FormControl>
                               <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="paymentTerms"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Payment Terms</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="e.g., 30 days" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="creditLimit"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Credit Limit</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="number" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -249,8 +280,8 @@ const Vendors = () => {
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button type="submit">
-                        {editingVendor ? 'Update' : 'Add'} Vendor
+                      <Button type="submit" disabled={loading}>
+                        {loading ? 'Saving...' : editingVendor ? 'Update' : 'Add'} Vendor
                       </Button>
                     </div>
                   </form>
@@ -273,8 +304,8 @@ const Vendors = () => {
                   <TableHead>Contact Person</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>GST Number</TableHead>
-                  <TableHead>Credit Limit</TableHead>
+                  <TableHead>City</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -282,11 +313,19 @@ const Vendors = () => {
                 {vendors.map((vendor) => (
                   <TableRow key={vendor.id}>
                     <TableCell>{vendor.name}</TableCell>
-                    <TableCell>{vendor.contactPerson}</TableCell>
+                    <TableCell>{vendor.contact_person}</TableCell>
                     <TableCell>{vendor.phone}</TableCell>
                     <TableCell>{vendor.email}</TableCell>
-                    <TableCell>{vendor.gstNumber}</TableCell>
-                    <TableCell>₹{vendor.creditLimit}</TableCell>
+                    <TableCell>{vendor.city}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        vendor.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {vendor.status}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
@@ -299,7 +338,7 @@ const Vendors = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => deleteVendor(vendor.id)}
+                          onClick={() => deleteVendor(vendor.id!)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
