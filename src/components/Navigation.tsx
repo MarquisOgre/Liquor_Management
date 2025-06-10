@@ -20,6 +20,11 @@ const Navigation = () => {
     <nav className="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
+          <img 
+            src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=40&h=40&fit=crop&crop=center" 
+            alt="Logo" 
+            className="w-10 h-10 rounded-lg object-cover"
+          />
           <h1 
             className="text-xl font-bold text-gray-900 cursor-pointer" 
             onClick={() => navigate('/')}

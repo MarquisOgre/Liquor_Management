@@ -68,7 +68,7 @@ const Index = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Insights</div>
+              <div className="text-2xl font-bold">Analytics</div>
               <p className="text-xs text-muted-foreground">
                 Generate reports and analyze your inventory performance.
               </p>
