@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Package, Users, TrendingUp, FileText, Plus } from 'lucide-react';
+import { ShoppingCart, Package, Users, Plus, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 
@@ -17,71 +17,60 @@ const Index = () => {
             Liquor Inventory Management System
           </h1>
           <p className="text-lg text-gray-600">
-            Manage your liquor inventory, track sales, and optimize your business operations
+            Manage your liquor inventory, track purchases, and optimize your business operations
           </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* 2x2 Layout Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+          {/* First Row */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/inventory')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inventory Management</CardTitle>
+              <CardTitle className="text-sm font-medium">Track Stock</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Track Stock</div>
+              <div className="text-2xl font-bold">Inventory Management</div>
               <p className="text-xs text-muted-foreground">
                 Monitor your inventory levels and manage stock efficiently.
               </p>
             </CardContent>
           </Card>
 
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/purchase-invoices')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Purchase Invoice</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Create Invoices</div>
+              <p className="text-xs text-muted-foreground">
+                Create and manage purchase invoices for restocking.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Second Row */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/vendors')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Vendor Management</CardTitle>
+              <CardTitle className="text-sm font-medium">Suppliers</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Suppliers</div>
+              <div className="text-2xl font-bold">Vendor Management</div>
               <p className="text-xs text-muted-foreground">
                 Manage your supplier relationships and contact information.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/purchase-orders')}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Purchase Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Orders</div>
-              <p className="text-xs text-muted-foreground">
-                Create and manage purchase orders for restocking.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/reports')}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reports & Analytics</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Analytics</div>
-              <p className="text-xs text-muted-foreground">
-                Generate reports and analyze your inventory performance.
-              </p>
-            </CardContent>
-          </Card>
-
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/brands')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Brand Management</CardTitle>
+              <CardTitle className="text-sm font-medium">Brands</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Brands</div>
+              <div className="text-2xl font-bold">Brand Management</div>
               <p className="text-xs text-muted-foreground">
                 Manage product brands and categories in your inventory.
               </p>
@@ -90,15 +79,15 @@ const Index = () => {
         </div>
 
         {/* Quick Create Actions */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-4">
             <Button 
-              onClick={() => navigate('/purchase-order')}
+              onClick={() => navigate('/purchase-invoice')}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4" />
-              Create Purchase Order
+              Create Purchase Invoice
             </Button>
             <Button 
               onClick={() => navigate('/inventory')}

@@ -75,13 +75,13 @@ export type Database = {
         }
         Relationships: []
       }
-      purchase_order_items: {
+      purchase_invoice_items: {
         Row: {
           brand: string | null
           created_at: string
           id: string
           item_name: string
-          purchase_order_id: string | null
+          purchase_invoice_id: string | null
           quantity: number
           size: string | null
           total_price: number | null
@@ -93,7 +93,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_name: string
-          purchase_order_id?: string | null
+          purchase_invoice_id?: string | null
           quantity?: number
           size?: string | null
           total_price?: number | null
@@ -105,7 +105,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_name?: string
-          purchase_order_id?: string | null
+          purchase_invoice_id?: string | null
           quantity?: number
           size?: string | null
           total_price?: number | null
@@ -115,23 +115,23 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
-            columns: ["purchase_order_id"]
+            columns: ["purchase_invoice_id"]
             isOneToOne: false
-            referencedRelation: "purchase_orders"
+            referencedRelation: "purchase_invoices"
             referencedColumns: ["id"]
           },
         ]
       }
-      purchase_orders: {
+      purchase_invoices: {
         Row: {
           created_at: string
           created_by: string | null
           currency: string | null
           expected_delivery_date: string | null
           id: string
+          invoice_number: string
           notes: string | null
           order_date: string
-          po_number: string
           status: string
           total_amount: number | null
           updated_at: string
@@ -144,9 +144,9 @@ export type Database = {
           currency?: string | null
           expected_delivery_date?: string | null
           id?: string
+          invoice_number: string
           notes?: string | null
           order_date?: string
-          po_number: string
           status?: string
           total_amount?: number | null
           updated_at?: string
@@ -159,9 +159,9 @@ export type Database = {
           currency?: string | null
           expected_delivery_date?: string | null
           id?: string
+          invoice_number?: string
           notes?: string | null
           order_date?: string
-          po_number?: string
           status?: string
           total_amount?: number | null
           updated_at?: string

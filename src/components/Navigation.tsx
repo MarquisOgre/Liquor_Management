@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User, Settings, Package, Users, FileText, ShoppingCart } from 'lucide-react';
 
 const Navigation = () => {
   const { user, profile, signOut, isAdmin } = useAuth();
@@ -31,6 +31,49 @@ const Navigation = () => {
           >
             Liquor Inventory
           </h1>
+        </div>
+        
+        {/* Navigation Menu */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/inventory')}
+            className="flex items-center gap-2"
+          >
+            <Package className="w-4 h-4" />
+            Inventory
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/purchase-invoices')}
+            className="flex items-center gap-2"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Purchase Invoice
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/vendors')}
+            className="flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Suppliers
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/brands')}
+            className="flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            Brands
+          </Button>
         </div>
         
         <div className="flex items-center gap-4">
