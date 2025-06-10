@@ -106,7 +106,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
-  const isAdmin = profile?.role === 'admin';
+  // Check if user is admin by email or role
+  const isAdmin = user?.email === 'admin@gmail.com' || profile?.role === 'admin';
 
   const value = {
     user,

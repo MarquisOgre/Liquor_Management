@@ -9,9 +9,9 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       <Navigation />
-      <div className="container mx-auto p-4">
+      <div className="flex-1 container mx-auto p-4 flex flex-col">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Liquor Inventory Management System
@@ -22,7 +22,7 @@ const Index = () => {
         </div>
 
         {/* 2x2 Layout Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto flex-shrink-0">
           {/* First Row */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/inventory')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -79,7 +79,7 @@ const Index = () => {
         </div>
 
         {/* Quick Create Actions */}
-        <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto flex-shrink-0">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-4">
             <Button 
