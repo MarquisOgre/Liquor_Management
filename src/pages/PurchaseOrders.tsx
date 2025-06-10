@@ -14,9 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 
-interface PurchaseOrder {
+interface PurchaseInvoice {
   id: string;
-  po_number: string;
+  invoice_number: string;
   vendor_name: string;
   order_date: string;
   expected_delivery_date: string | null;
@@ -29,7 +29,7 @@ interface PurchaseOrder {
 const PurchaseOrders = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [dateFilter, setDateFilter] = useState("all");
   const [customStartDate, setCustomStartDate] = useState<Date>();
@@ -67,11 +67,11 @@ const PurchaseOrders = () => {
     return { startDate, endDate };
   };
 
-  const fetchPurchaseOrders = async () => {
+  const fetchPurchaseInvoices = async () => {
     setLoading(true);
     try {
       let query = supabase
-        .from('purchase_orders')
+        .from('purchase_invoices')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -87,12 +87,12 @@ const PurchaseOrders = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      setPurchaseOrders(data || []);
+      setPurchaseInvoices(data || []);
     } catch (error) {
-      console.error('Error fetching purchase orders:', error);
+      console.error('Error fetching purchase invoices:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch purchase orders",
+        description: "Failed to fetch purchase invoices",
         variant: "destructive",
       });
     } finally {
@@ -101,7 +101,7 @@ const PurchaseOrders = () => {
   };
 
   useEffect(() => {
-    fetchPurchaseOrders();
+    fetchPurchaseInvoices();
   }, [dateFilter, customStartDate, customEndDate]);
 
   const getStatusColor = (status: string) => {
@@ -138,15 +138,15 @@ const PurchaseOrders = () => {
                 <Home className="w-4 h-4" />
                 Home
               </Button>
-              <h1 className="text-3xl font-bold text-gray-800">Purchase Orders</h1>
+              <h1 className="text-3xl font-bold text-gray-800">Purchase Invoices</h1>
             </div>
             
             <Button 
-              onClick={() => navigate("/purchase-order")}
+              onClick={() => navigate("/purchase-invoice")}
               className="bg-green-600 hover:bg-green-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create Purchase Order
+              Create Purchase Invoice
             </Button>
           </div>
         </div>
@@ -235,10 +235,10 @@ const PurchaseOrders = () => {
           </CardContent>
         </Card>
 
-        {/* Purchase Orders Table */}
+        {/* Purchase Invoices Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Purchase Orders List</CardTitle>
+            <CardTitle>Purchase Invoices List</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -247,7 +247,7 @@ const PurchaseOrders = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>PO Number</TableHead>
+                    <TableHead>Invoice Number</TableHead>
                     <TableHead>Vendor</TableHead>
                     <TableHead>Order Date</TableHead>
                     <TableHead>Expected Delivery</TableHead>
@@ -257,34 +257,34 @@ const PurchaseOrders = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchaseOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.po_number}</TableCell>
-                      <TableCell>{order.vendor_name}</TableCell>
-                      <TableCell>{format(new Date(order.order_date), "PPP")}</TableCell>
+                  {purchaseInvoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                      <TableCell>{invoice.vendor_name}</TableCell>
+                      <TableCell>{format(new Date(invoice.order_date), "PPP")}</TableCell>
                       <TableCell>
-                        {order.expected_delivery_date 
-                          ? format(new Date(order.expected_delivery_date), "PPP")
+                        {invoice.expected_delivery_date 
+                          ? format(new Date(invoice.expected_delivery_date), "PPP")
                           : "Not set"
                         }
                       </TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
-                          {order.status}
+                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(invoice.status)}`}>
+                          {invoice.status}
                         </span>
                       </TableCell>
                       <TableCell>
-                        {order.total_amount ? `₹${order.total_amount.toLocaleString()}` : "₹0"}
+                        {invoice.total_amount ? `₹${invoice.total_amount.toLocaleString()}` : "₹0"}
                       </TableCell>
                       <TableCell className="max-w-xs truncate">
-                        {order.notes || "No notes"}
+                        {invoice.notes || "No notes"}
                       </TableCell>
                     </TableRow>
                   ))}
-                  {purchaseOrders.length === 0 && (
+                  {purchaseInvoices.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                        No purchase orders found for the selected date range.
+                        No purchase invoices found for the selected date range.
                       </TableCell>
                     </TableRow>
                   )}

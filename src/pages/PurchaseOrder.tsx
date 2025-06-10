@@ -115,11 +115,11 @@ const PurchaseOrder = () => {
     try {
       const selectedVendorData = vendors.find(v => v.id === selectedVendor);
       
-      // Insert purchase order
-      const { data: poData, error: poError } = await supabase
-        .from('purchase_orders')
+      // Insert purchase invoice
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('purchase_invoices')
         .insert([{
-          po_number: invoiceNumber,
+          invoice_number: invoiceNumber,
           vendor_id: selectedVendor,
           vendor_name: selectedVendorData?.name || '',
           order_date: format(orderDate, 'yyyy-MM-dd'),
@@ -130,11 +130,11 @@ const PurchaseOrder = () => {
         .select()
         .single();
 
-      if (poError) throw poError;
+      if (invoiceError) throw invoiceError;
 
-      // Insert purchase order items
+      // Insert purchase invoice items
       const itemsToInsert = orderItems.map(item => ({
-        purchase_order_id: poData.id,
+        purchase_invoice_id: invoiceData.id,
         item_name: `${item.brand} ${item.size}`,
         brand: item.brand,
         size: item.size,
@@ -143,14 +143,14 @@ const PurchaseOrder = () => {
       }));
 
       const { error: itemsError } = await supabase
-        .from('purchase_order_items')
+        .from('purchase_invoice_items')
         .insert(itemsToInsert);
 
       if (itemsError) throw itemsError;
 
       toast({
-        title: "Purchase Order Created",
-        description: `Purchase order ${invoiceNumber} has been created successfully.`,
+        title: "Purchase Invoice Created",
+        description: `Purchase invoice ${invoiceNumber} has been created successfully.`,
       });
 
       // Reset form
@@ -160,10 +160,10 @@ const PurchaseOrder = () => {
       setOrderDate(new Date());
       setExpectedDelivery(new Date());
     } catch (error: any) {
-      console.error('Error saving purchase order:', error);
+      console.error('Error saving purchase invoice:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create purchase order",
+        description: error.message || "Failed to create purchase invoice",
         variant: "destructive",
       });
     } finally {
@@ -188,21 +188,21 @@ const PurchaseOrder = () => {
                 <Home className="w-4 h-4" />
                 Home
               </Button>
-              <h1 className="text-3xl font-bold text-gray-800">Create Purchase Order</h1>
+              <h1 className="text-3xl font-bold text-gray-800">Create Purchase Invoice</h1>
             </div>
             <Button
-              onClick={() => navigate("/purchase-orders")}
+              onClick={() => navigate("/purchase-invoices")}
               variant="outline"
             >
-              View All Orders
+              View All Invoices
             </Button>
           </div>
         </div>
 
-        {/* Purchase Order Form */}
+        {/* Purchase Invoice Form */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Purchase Order Details</CardTitle>
+            <CardTitle>Purchase Invoice Details</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -285,7 +285,7 @@ const PurchaseOrder = () => {
             {/* Order Items */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Order Items</h3>
+                <h3 className="text-lg font-semibold">Invoice Items</h3>
                 <Button onClick={addOrderItem} size="sm">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Item
@@ -387,7 +387,7 @@ const PurchaseOrder = () => {
                 disabled={loading}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {loading ? 'Saving...' : 'Save Order'}
+                {loading ? 'Saving...' : 'Save Invoice'}
               </Button>
             </div>
           </CardContent>
