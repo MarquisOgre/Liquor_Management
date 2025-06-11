@@ -1,37 +1,37 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Home, Plus, Edit } from "lucide-react";
+import { CalendarIcon, Home, TrendingUp, TrendingDown, Package, DollarSign } from "lucide-react";
 import { format, subDays, subMonths, subYears } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Navigation from "@/components/Navigation";
 
-interface PurchaseInvoice {
-  id: string;
-  invoice_number: string;
-  vendor_name: string;
-  order_date: string;
-  expected_delivery_date: string | null;
-  status: string;
-  total_amount: number | null;
-  notes: string | null;
-  created_at: string;
+interface AnalyticsData {
+  totalPurchases: number;
+  totalSales: number;
+  totalExpenses: number;
+  profitLoss: number;
+  currentStock: any[];
 }
 
-const PurchaseInvoices = () => {
+const Analytics = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
-  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
+    totalPurchases: 0,
+    totalSales: 0,
+    totalExpenses: 0,
+    profitLoss: 0,
+    currentStock: []
+  });
   const [loading, setLoading] = useState(false);
   const [dateFilter, setDateFilter] = useState("all");
   const [customStartDate, setCustomStartDate] = useState<Date>();
@@ -69,32 +69,92 @@ const PurchaseInvoices = () => {
     return { startDate, endDate };
   };
 
-  const fetchPurchaseInvoices = async () => {
+  const fetchAnalyticsData = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('purchase_invoices')
-        .select('*')
-        .order('created_at', { ascending: false });
-
       const { startDate, endDate } = getDateRange();
       
+      // Fetch total purchases
+      let purchaseQuery = supabase
+        .from('purchase_invoices')
+        .select('total_amount');
+      
       if (startDate) {
-        query = query.gte('order_date', format(startDate, 'yyyy-MM-dd'));
+        purchaseQuery = purchaseQuery.gte('order_date', format(startDate, 'yyyy-MM-dd'));
       }
       if (endDate && dateFilter === "custom") {
-        query = query.lte('order_date', format(endDate, 'yyyy-MM-dd'));
+        purchaseQuery = purchaseQuery.lte('order_date', format(endDate, 'yyyy-MM-dd'));
       }
 
-      const { data, error } = await query;
+      const { data: purchases, error: purchaseError } = await purchaseQuery;
+      if (purchaseError) throw purchaseError;
+
+      // Fetch total expenses
+      let expenseQuery = supabase
+        .from('expenses')
+        .select('amount');
       
-      if (error) throw error;
-      setPurchaseInvoices(data || []);
+      if (startDate) {
+        expenseQuery = expenseQuery.gte('expense_date', format(startDate, 'yyyy-MM-dd'));
+      }
+      if (endDate && dateFilter === "custom") {
+        expenseQuery = expenseQuery.lte('expense_date', format(endDate, 'yyyy-MM-dd'));
+      }
+
+      const { data: expenses, error: expenseError } = await expenseQuery;
+      if (expenseError) throw expenseError;
+
+      // Fetch inventory for sales calculation
+      let inventoryQuery = supabase
+        .from('inventory')
+        .select('*');
+      
+      if (startDate) {
+        inventoryQuery = inventoryQuery.gte('date', format(startDate, 'yyyy-MM-dd'));
+      }
+      if (endDate && dateFilter === "custom") {
+        inventoryQuery = inventoryQuery.lte('date', format(endDate, 'yyyy-MM-dd'));
+      }
+
+      const { data: inventory, error: inventoryError } = await inventoryQuery;
+      if (inventoryError) throw inventoryError;
+
+      // Get current stock (latest inventory data)
+      const { data: currentStock, error: stockError } = await supabase
+        .from('inventory')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (stockError) throw stockError;
+
+      // Calculate totals
+      const totalPurchases = purchases?.reduce((sum, p) => sum + (p.total_amount || 0), 0) || 0;
+      const totalExpenses = expenses?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+      const totalSales = inventory?.reduce((sum, i) => sum + (i.sales || 0), 0) || 0;
+      const profitLoss = totalSales - totalPurchases - totalExpenses;
+
+      // Get unique current stock by brand and size (latest entries)
+      const stockMap = new Map();
+      currentStock?.forEach(item => {
+        const key = `${item.brand}-${item.size}`;
+        if (!stockMap.has(key) || new Date(item.date) > new Date(stockMap.get(key).date)) {
+          stockMap.set(key, item);
+        }
+      });
+
+      setAnalyticsData({
+        totalPurchases,
+        totalSales,
+        totalExpenses,
+        profitLoss,
+        currentStock: Array.from(stockMap.values())
+      });
+
     } catch (error) {
-      console.error('Error fetching purchase invoices:', error);
+      console.error('Error fetching analytics data:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch purchase invoices",
+        description: "Failed to fetch analytics data",
         variant: "destructive",
       });
     } finally {
@@ -103,29 +163,8 @@ const PurchaseInvoices = () => {
   };
 
   useEffect(() => {
-    fetchPurchaseInvoices();
+    fetchAnalyticsData();
   }, [dateFilter, customStartDate, customEndDate]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const editInvoice = (invoiceId: string) => {
-    navigate(`/purchase-invoice/${invoiceId}`);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -144,23 +183,15 @@ const PurchaseInvoices = () => {
                 <Home className="w-4 h-4" />
                 Home
               </Button>
-              <h1 className="text-3xl font-bold text-gray-800">Purchase Invoices</h1>
+              <h1 className="text-3xl font-bold text-gray-800">Analytics & Reports</h1>
             </div>
-            
-            <Button 
-              onClick={() => navigate("/purchase-invoice")}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Purchase Invoice
-            </Button>
           </div>
         </div>
 
         {/* Filters */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Filters</CardTitle>
+            <CardTitle>Date Range Filter</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 items-end">
@@ -241,10 +272,55 @@ const PurchaseInvoices = () => {
           </CardContent>
         </Card>
 
-        {/* Purchase Invoices Table */}
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₹{analyticsData.totalPurchases.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₹{analyticsData.totalSales.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₹{analyticsData.totalExpenses.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Profit & Loss</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${analyticsData.profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                ₹{analyticsData.profitLoss.toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Current Stock Report */}
         <Card>
           <CardHeader>
-            <CardTitle>Purchase Invoices List</CardTitle>
+            <CardTitle>Current Stock Report</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -253,58 +329,31 @@ const PurchaseInvoices = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Invoice Number</TableHead>
-                    <TableHead>Vendor</TableHead>
-                    <TableHead>Order Date</TableHead>
-                    <TableHead>Expected Delivery</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Total Amount</TableHead>
-                    <TableHead>Notes</TableHead>
-                    {isAdmin && <TableHead>Actions</TableHead>}
+                    <TableHead>Brand</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Opening Balance</TableHead>
+                    <TableHead>Purchase</TableHead>
+                    <TableHead>Sales</TableHead>
+                    <TableHead>Closing Stock</TableHead>
+                    <TableHead>Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchaseInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                      <TableCell>{invoice.vendor_name}</TableCell>
-                      <TableCell>{format(new Date(invoice.order_date), "PPP")}</TableCell>
-                      <TableCell>
-                        {invoice.expected_delivery_date 
-                          ? format(new Date(invoice.expected_delivery_date), "PPP")
-                          : "Not set"
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(invoice.status)}`}>
-                          {invoice.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {invoice.total_amount ? `₹${invoice.total_amount.toLocaleString()}` : "₹0"}
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {invoice.notes || "No notes"}
-                      </TableCell>
-                      {isAdmin && (
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => editInvoice(invoice.id)}
-                            className="flex items-center gap-2"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                          </Button>
-                        </TableCell>
-                      )}
+                  {analyticsData.currentStock.map((item) => (
+                    <TableRow key={`${item.brand}-${item.size}`}>
+                      <TableCell className="font-medium">{item.brand}</TableCell>
+                      <TableCell>{item.size}</TableCell>
+                      <TableCell>{item.opening_balance || 0}</TableCell>
+                      <TableCell>{item.purchase || 0}</TableCell>
+                      <TableCell>{item.sales || 0}</TableCell>
+                      <TableCell>{item.closing_stock || 0}</TableCell>
+                      <TableCell>{format(new Date(item.date), "PPP")}</TableCell>
                     </TableRow>
                   ))}
-                  {purchaseInvoices.length === 0 && (
+                  {analyticsData.currentStock.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-8 text-gray-500">
-                        No purchase invoices found for the selected date range.
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        No stock data available.
                       </TableCell>
                     </TableRow>
                   )}
@@ -318,4 +367,4 @@ const PurchaseInvoices = () => {
   );
 };
 
-export default PurchaseInvoices;
+export default Analytics;

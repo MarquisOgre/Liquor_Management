@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User, Settings, Package, Users, FileText, ShoppingCart } from 'lucide-react';
+import { LogOut, User, Settings, Package, Users, FileText, ShoppingCart, BarChart3, Receipt } from 'lucide-react';
 
 const Navigation = () => {
   const { user, profile, signOut, isAdmin } = useAuth();
@@ -19,6 +19,7 @@ const Navigation = () => {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
       <div className="container mx-auto flex justify-between items-center">
+        {/* Logo - Complete Left */}
         <div className="flex items-center gap-4">
           <img 
             src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=40&h=40&fit=crop&crop=center" 
@@ -33,8 +34,8 @@ const Navigation = () => {
           </h1>
         </div>
         
-        {/* Navigation Menu */}
-        <div className="flex items-center gap-4">
+        {/* Navigation Menu - Center */}
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -74,8 +75,29 @@ const Navigation = () => {
             <FileText className="w-4 h-4" />
             Brands
           </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/expenses')}
+            className="flex items-center gap-2"
+          >
+            <Receipt className="w-4 h-4" />
+            Expenses
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/analytics')}
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </Button>
         </div>
         
+        {/* User Info & Actions - Complete Right */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <User className="w-4 h-4" />

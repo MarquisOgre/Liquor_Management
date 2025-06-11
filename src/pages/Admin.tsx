@@ -1,31 +1,32 @@
 
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Home } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Navigation from '@/components/Navigation';
-import UserManagement from '@/components/admin/UserManagement';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Home, Users, Store } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import UserManagement from "@/components/admin/UserManagement";
+import Navigation from "@/components/Navigation";
 
 const Admin = () => {
-  const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-lg text-gray-600">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  const { isAdmin } = useAuth();
 
   if (!isAdmin) {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="text-center">Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="mb-4">You don't have permission to access this page.</p>
+            <Button onClick={() => navigate("/")}>Go Home</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -48,7 +49,34 @@ const Admin = () => {
           </div>
         </div>
 
-        <UserManagement />
+        {/* Admin Tabs */}
+        <Tabs defaultValue="users" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              User Management
+            </TabsTrigger>
+            <TabsTrigger value="stores" className="flex items-center gap-2">
+              <Store className="w-4 h-4" />
+              Store Management
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="users" className="mt-6">
+            <UserManagement />
+          </TabsContent>
+          
+          <TabsContent value="stores" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Store Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">Store management functionality will be implemented here.</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

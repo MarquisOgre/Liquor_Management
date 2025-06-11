@@ -12,6 +12,8 @@ import Brands from "./pages/Brands";
 import Vendors from "./pages/Vendors";
 import PurchaseInvoice from "./pages/PurchaseInvoice";
 import PurchaseInvoices from "./pages/PurchaseInvoices";
+import Expenses from "./pages/Expenses";
+import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -55,9 +57,24 @@ const App = () => (
                     <PurchaseInvoice />
                   </ProtectedRoute>
                 } />
+                <Route path="/purchase-invoice/:id" element={
+                  <ProtectedRoute>
+                    <PurchaseInvoice />
+                  </ProtectedRoute>
+                } />
                 <Route path="/purchase-invoices" element={
                   <ProtectedRoute>
                     <PurchaseInvoices />
+                  </ProtectedRoute>
+                } />
+                <Route path="/expenses" element={
+                  <ProtectedRoute>
+                    <Expenses />
+                  </ProtectedRoute>
+                } />
+                <Route path="/analytics" element={
+                  <ProtectedRoute>
+                    <Analytics />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin" element={
